@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Leave Approval</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1e1e2e; /* Dark blue background */
+      color: white;
+    }
+    .leave-card {
+      transition: transform 0.2s;
+    }
+    .leave-card:hover {
+      transform: translateY(-5px);
+    }
+    .status-pending {
+      color: #f17846; /* Orange for pending */
+    }
+    .status-approved {
+      color: #25a07c; /* Green for approved */
+    }
+    .status-declined {
+      color: #e63234; /* Red for declined */
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-6">
+
+  <div class="bg-gradient-to-br from-[#1b1c34] to-[#121122] rounded-xl shadow-lg p-8 w-full max-w-4xl mt-12">
+    <h1 class="text-3xl font-bold text-center mb-8">Teacher Leave Approval Portal</h1>
+
+    <div id="pendingRequests" class="space-y-6"></div>
+  </div>
+
+  <script>
+    const leaveRequests = [
+      {
+        id: 1,
+        name: 'Aarav Sharma',
+        rollNo: '101',
+        leaveType: 'Sick',
+        fromDate: '2025-09-12',
+        toDate: '2025-09-13',
+        reason: 'Fever and cold.',
+        status: 'pending'
+      },
+      {
+        id: 2,
+        name: 'Priya Verma',
+        rollNo: '102',
+        leaveType: 'Personal',
+        fromDate: '2025-09-15',
+        toDate: '2025-09-15',
+        reason: 'Attending a family function out of town.',
+        status: 'pending'
+      },
+      {
+        id: 3,
+        name: 'Rohan Malik',
+        rollNo: 'CSE-2023-10',
+        leaveType: 'Other',
+        fromDate: '2025-09-16',
+        toDate: '2025-09-16',
+        reason: 'Participating in an inter-college debate competition.',
+        status: 'pending'
+      }
+    ];
+
+    const pendingRequestsDiv = document.getElementById('pendingRequests');
+
+    function renderRequests() {
+      pendingRequestsDiv.innerHTML = '';
+      const pendingLeaves = leaveRequests.filter(req => req.status === 'pending');
+
+      if (pendingLeaves.length === 0) {
+        pendingRequestsDiv.innerHTML =
+          '<p class="text-center text-gray-400">🎉 No pending leave requests at this time.</p>';
+        return;
+      }
+
+      pendingLeaves.forEach(request => {
+        const card = document.createElement('div');
+        card.className =
+          'leave-card bg-[#6a44c9] p-6 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-center';
+
+        card.innerHTML = `
+          <div class="flex-1 mb-4 md:mb-0">
+            <h2 class="text-xl font-semibold">${request.name}</h2>
+            <p class="text-gray-200">Roll No: ${request.rollNo}</p>
+            <p class="text-sm mt-2"><span class="font-medium">Type:</span> ${request.leaveType}</p>
+            <p class="text-sm"><span class="font-medium">Dates:</span> ${request.fromDate} to ${request.toDate}</p>
+            <p class="text-sm mt-2 italic text-gray-300">Reason: ${request.reason}</p>
+          </div>
+          <div class="flex flex-col space-y-2 md:space-y-0 md:flex-row md:space-x-4">
+            <button onclick="approveLeave(${request.id})" class="px-6 py-3 bg-[#25a07c] rounded-lg hover:bg-[#1e8b69] transition font-semibold">Approve</button>
+            <button onclick="declineLeave(${request.id})" class="px-6 py-3 bg-[#e63234] rounded-lg hover:bg-[#c22829] transition font-semibold">Decline</button>
+          </div>
+        `;
+        pendingRequestsDiv.appendChild(card);
+      });
+    }
+
+    function approveLeave(id) {
+      const request = leaveRequests.find(req => req.id === id);
+      if (request) {
+        request.status = 'approved';
+        alert(`✅ Leave for ${request.name} has been approved.`);
+        renderRequests();
+      }
+    }
+
+    function declineLeave(id) {
+      const request = leaveRequests.find(req => req.id === id);
+      if (request) {
+        request.status = 'declined';
+        alert(`❌ Leave for ${request.name} has been declined.`);
+        renderRequests();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderRequests);
+  </script>
+</body>
+</html>
