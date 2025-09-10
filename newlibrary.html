@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library Teacher Portal</title>
+  <style>
+    :root {
+      --primary-color: #8b5cf6; /* Purple accent */
+      --bg-dark: #0e0e1a;      /* Page background */
+      --card-bg: #1a1b26;      /* Card background */
+      --text-color: #e0e0e0;   /* Primary text */
+      --muted-text: #a1a1aa;   /* Secondary text */
+      --success: #22c55e;      /* Green */
+      --danger: #ef4444;       /* Red */
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-color);
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .card-header {
+      color: var(--primary-color);
+      font-size: 1.5em;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted-text);
+      font-size: 0.95em;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    select,
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      background-color: #252634;
+      color: var(--text-color);
+      font-size: 1em;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background-color: #6d28d9;
+      transform: translateY(-2px);
+    }
+
+    .seat-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 10px;
+    }
+
+    .seat {
+      padding: 15px 10px;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #fff;
+      transition: transform 0.2s;
+    }
+
+    .seat.green {
+      background-color: var(--success);
+    }
+
+    .seat.red {
+      background-color: var(--danger);
+    }
+
+    .seat:hover {
+      transform: scale(1.05);
+    }
+
+    .success-message {
+      color: var(--success);
+      margin-top: 10px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1 style="text-align: center; color: var(--primary-color);">Library Teacher Portal</h1>
+
+  <div class="card">
+    <div class="card-header">Manage Issued Books</div>
+    <form id="bookForm">
+      <label for="bookName">Book Name:</label>
+      <input type="text" id="bookName" value="Introduction to Programming" required>
+
+      <label for="issueDate">Issue Date:</label>
+      <input type="date" id="issueDate" value="2025-09-01" required>
+
+      <label for="returnDate">Return Date:</label>
+      <input type="date" id="returnDate" value="2025-09-08" required>
+
+      <label for="fineAmount">Fine (₹):</label>
+      <input type="number" id="fineAmount" value="50" required>
+
+      <button type="submit">Update Book Details</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Manage Seat Availability</div>
+    <p style="color: var(--muted-text);">Click on a seat to toggle its status (Green: Available, Red: Occupied).</p>
+    <div class="seat-grid" id="seatGrid"></div>
+  </div>
+</div>
+
+<script>
+  // Initial data for seats
+  let seats = Array.from({ length: 50 }, (_, i) => ({
+    id: i + 1,
+    status: (i + 1) % 5 === 0 ? 'red' : 'green'
+  }));
+
+  const saveData = () => {
+    localStorage.setItem('libraryData', JSON.stringify({
+      books: {
+        bookName: document.getElementById('bookName').value,
+        issueDate: document.getElementById('issueDate').value,
+        returnDate: document.getElementById('returnDate').value,
+        fineAmount: document.getElementById('fineAmount').value
+      },
+      seats: seats
+    }));
+  };
+
+  const loadData = () => {
+    const storedData = localStorage.getItem('libraryData');
+    if (storedData) {
+      const data = JSON.parse(storedData);
+      document.getElementById('bookName').value = data.books.bookName;
+      document.getElementById('issueDate').value = data.books.issueDate;
+      document.getElementById('returnDate').value = data.books.returnDate;
+      document.getElementById('fineAmount').value = data.books.fineAmount;
+      seats = data.seats;
+    }
+  };
+
+  const renderSeats = () => {
+    const seatGrid = document.getElementById('seatGrid');
+    seatGrid.innerHTML = '';
+    seats.forEach(seat => {
+      const seatDiv = document.createElement('div');
+      seatDiv.className = `seat ${seat.status}`;
+      seatDiv.textContent = `Seat ${seat.id}`;
+      seatDiv.addEventListener('click', () => {
+        seat.status = seat.status === 'green' ? 'red' : 'green';
+        renderSeats();
+        saveData();
+      });
+      seatGrid.appendChild(seatDiv);
+    });
+  };
+
+  document.getElementById('bookForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    saveData();
+    alert('Book details updated successfully!');
+  });
+
+  loadData();
+  renderSeats();
+</script>
+
+</body>
+</html>
