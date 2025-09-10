@@ -93,7 +93,7 @@
 
     <div id="studentFormPage" class="hidden flex flex-col items-center mt-12 w-full max-w-4xl">
         <h2 id="formHeading" class="text-2xl font-bold mb-6 text-center">Student Details</h2>
-        <form class="bg-gray-800 p-8 rounded-xl shadow-lg w-full space-y-6">
+        <form class="bg-gray-800 p-8 rounded-xl shadow-lg w-full space-y-6" onsubmit="event.preventDefault(); saveChanges();">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
                     <h3 class="text-xl font-semibold text-purple-400">Personal Details</h3>
@@ -223,11 +223,11 @@
                     </div>
                 </div>
             </div>
+            <div class="flex space-x-4 mt-8">
+                <button type="button" onclick="backToStudents()" class="px-8 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition font-semibold">Back to List</button>
+                <button type="submit" class="px-8 py-3 bg-green-600 rounded-lg hover:bg-green-500 transition font-semibold">Save Changes</button>
+            </div>
         </form>
-        <div class="flex space-x-4 mt-8">
-            <button onclick="backToStudents()" class="px-8 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition font-semibold">Back to List</button>
-            <button onclick="saveChanges()" class="px-8 py-3 bg-green-600 rounded-lg hover:bg-green-500 transition font-semibold">Save Changes</button>
-        </div>
     </div>
 
     <script>
@@ -285,14 +285,8 @@
         }
 
         function saveChanges() {
-            if (currentStudentIndex === -1) {
-                alert('No student selected to save changes for.');
-                return;
-            }
-
-            const updatedStudent = {
+            const student = {
                 name: document.getElementById('form-name').value,
-                rollNo: document.getElementById('form-univ-roll-no').value,
                 dob: document.getElementById('form-dob').value,
                 gender: document.getElementById('form-gender').value,
                 contact: document.getElementById('form-contact').value,
@@ -314,138 +308,96 @@
                 quota: document.getElementById('form-quota').value,
                 hostel: document.getElementById('form-hostel').value,
                 mess: document.getElementById('form-mess').value,
-                transport: document.getElementById('form-transport').value,
+                transport: document.getElementById('form-transport').value
             };
 
-            studentsData[currentYear][currentSelection][currentStudentIndex] = updatedStudent;
-            alert('Changes saved successfully!');
+            if (currentStudentIndex >= 0) {
+                studentsData[currentYear][currentSelection][currentStudentIndex] = student;
+            } else {
+                studentsData[currentYear][currentSelection].push(student);
+            }
+
+            alert("✅ Student details saved successfully!");
             backToStudents();
+        }
+
+        function addStudent() {
+            const name = document.getElementById('newStudentName').value.trim();
+            const rollNo = document.getElementById('newStudentRollNo').value.trim();
+
+            if (!name || !rollNo) {
+                alert("⚠ Please enter both Name and Roll Number");
+                return;
+            }
+
+            const newStudent = {
+                name, rollNo, dob: '', gender: '', contact: '', email: '',
+                address: '', parentsName: '', parentsContact: '', parentsEmail: '',
+                admissionNo: '', univRollNo: '', admissionDate: '', status: '',
+                session: '', course: '', section: '', group: '', admSem: '',
+                currentSem: '', quota: '', hostel: '', mess: '', transport: ''
+            };
+
+            studentsData[currentYear][currentSelection].push(newStudent);
+            document.getElementById('newStudentName').value = '';
+            document.getElementById('newStudentRollNo').value = '';
+            loadStudents(currentYear, currentSelection);
+        }
+
+        function loadStudents(year, section) {
+            currentYear = year;
+            currentSelection = section;
+            document.getElementById('sectionSelection').classList.add('hidden');
+            document.getElementById('studentListPage').classList.remove('hidden');
+
+            document.getElementById('studentListHeading').textContent = `${year} Year - ${section}`;
+            const studentsListDiv = document.getElementById('studentsList');
+            studentsListDiv.innerHTML = '';
+
+            studentsData[year][section].forEach((student, index) => {
+                const studentCard = document.createElement('div');
+                studentCard.className = "p-4 bg-purple-600 rounded-lg shadow flex justify-between items-center";
+                studentCard.innerHTML = `
+                    <span class="font-semibold">${student.name} (${student.rollNo || 'No Roll No'})</span>
+                    <button onclick="showStudentForm(studentsData['${year}']['${section}'][${index}], ${index})" 
+                        class="px-4 py-2 bg-gray-900 rounded-lg hover:bg-gray-700 transition text-sm font-semibold">View/Edit</button>
+                `;
+                studentsListDiv.appendChild(studentCard);
+            });
         }
 
         function showSections(year) {
             currentYear = year;
             document.getElementById('yearSelection').classList.add('hidden');
             document.getElementById('sectionSelection').classList.remove('hidden');
+            document.getElementById('selectedYear').textContent = `${year} Year`;
 
             const sectionsGrid = document.getElementById('sectionsGrid');
             sectionsGrid.innerHTML = '';
 
-            if (['2nd', '3rd', '4th'].includes(year)) {
-                document.getElementById('selectedYear').textContent = `${year} Year - Select Branch`;
-                const branches = ['CSE', 'AI', 'DS', 'IT'];
-                
-                branches.forEach(branch => {
-                    const branchCard = document.createElement('div');
-                    branchCard.className = 'card p-6 bg-purple-600 rounded-xl shadow-lg text-center';
-                    branchCard.textContent = branch;
-                    branchCard.onclick = () => showStudents(year, branch);
-                    sectionsGrid.appendChild(branchCard);
-                });
-            } else {
-                document.getElementById('selectedYear').textContent = `${year} Year - Select Section`;
-                for(let i=1; i<=5; i++){
-                    const sectionName = `Sec ${i}`;
-                    const sectionCard = document.createElement('div');
-                    sectionCard.className = 'card p-6 bg-indigo-600 rounded-xl shadow-lg text-center';
-                    sectionCard.textContent = sectionName;
-                    sectionCard.onclick = () => showStudents(year, sectionName);
-                    sectionsGrid.appendChild(sectionCard);
-                }
-            }
-        }
-
-        function showStudents(year, selection) {
-            currentSelection = selection;
-            document.getElementById('sectionSelection').classList.add('hidden');
-            document.getElementById('studentListPage').classList.remove('hidden');
-            document.getElementById('studentListHeading').textContent = `Students in ${year} Year - ${selection}`;
-
-            renderStudents();
-        }
-
-        function renderStudents() {
-            const listContainer = document.getElementById('studentsList');
-            listContainer.innerHTML = '';
-            
-            const students = studentsData[currentYear]?.[currentSelection] || [];
-
-            if (students.length === 0) {
-                listContainer.innerHTML = `<p class="text-center text-gray-400">No students found. Add one below.</p>`;
-            } else {
-                students.forEach((student, index) => {
-                    const studentCard = document.createElement('div');
-                    studentCard.className = 'p-4 bg-gray-700 rounded-lg shadow-sm flex justify-between items-center cursor-pointer hover:bg-gray-600 transition';
-                    studentCard.innerHTML = `
-                        <div>
-                            <p class="font-semibold">${student.name}</p>
-                            <p class="text-sm text-gray-400">Roll No: ${student.rollNo}</p>
-                        </div>
-                    `;
-                    studentCard.addEventListener('click', () => {
-                        showStudentForm(student, index);
-                    });
-
-                    listContainer.appendChild(studentCard);
-                });
-            }
-        }
-
-        function addStudent() {
-            const nameInput = document.getElementById('newStudentName');
-            const rollNoInput = document.getElementById('newStudentRollNo');
-            const name = nameInput.value.trim();
-            const rollNo = rollNoInput.value.trim();
-
-            if (name === '' || rollNo === '') {
-                alert('Please enter both name and roll number.');
-                return;
-            }
-
-            const newStudent = { 
-                name: name, 
-                rollNo: rollNo, 
-                dob: '', gender: '', contact: '', email: '', address: '',
-                parentsName: '', parentsContact: '', parentsEmail: '',
-                admissionNo: '', univRollNo: rollNo, admissionDate: '', status: '', session: '',
-                course: '', section: '', group: '', admSem: '', currentSem: '',
-                quota: '', hostel: '', mess: '', transport: ''
-            };
-
-            if (!studentsData[currentYear]) {
-                studentsData[currentYear] = {};
-            }
-            if (!studentsData[currentYear][currentSelection]) {
-                studentsData[currentYear][currentSelection] = [];
-            }
-
-            studentsData[currentYear][currentSelection].push(newStudent);
-            renderStudents();
-
-            nameInput.value = '';
-            rollNoInput.value = '';
+            Object.keys(studentsData[year]).forEach(section => {
+                const sectionBtn = document.createElement('button');
+                sectionBtn.textContent = section;
+                sectionBtn.className = "px-6 py-3 bg-purple-600 rounded-lg hover:bg-purple-500 transition";
+                sectionBtn.onclick = () => loadStudents(year, section);
+                sectionsGrid.appendChild(sectionBtn);
+            });
         }
 
         function backToYears() {
-            document.getElementById('yearSelection').classList.remove('hidden');
             document.getElementById('sectionSelection').classList.add('hidden');
-            document.getElementById('studentListPage').classList.add('hidden');
-            document.getElementById('studentFormPage').classList.add('hidden');
+            document.getElementById('yearSelection').classList.remove('hidden');
         }
 
         function backToSections() {
-            document.getElementById('sectionSelection').classList.remove('hidden');
             document.getElementById('studentListPage').classList.add('hidden');
-            document.getElementById('studentFormPage').classList.add('hidden');
-        }
-        
-        function backToStudents() {
-            document.getElementById('studentListPage').classList.remove('hidden');
-            document.getElementById('studentFormPage').classList.add('hidden');
-            currentStudentIndex = -1;
-            renderStudents();
+            document.getElementById('sectionSelection').classList.remove('hidden');
         }
 
-        window.onload = () => backToYears();
+        function backToStudents() {
+            document.getElementById('studentFormPage').classList.add('hidden');
+            document.getElementById('studentListPage').classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
