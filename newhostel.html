@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Hostel Management</title>
+    <style>
+        body {
+            background-color: #0e0e1a;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 30px;
+        }
+
+        .card {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #141428;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 26px;
+            margin-bottom: 20px;
+            color: #c084fc;
+            text-align: center;
+        }
+
+        .hostel-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            background: #1e1e2e;
+            color: #bbb;
+            transition: background 0.3s, color 0.3s;
+            border-radius: 8px;
+            margin: 0 5px;
+        }
+
+        .tab-button.active {
+            background: #c084fc;
+            color: white;
+        }
+
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .room-card {
+            background: #1e1e2e;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .room-card.occupied {
+            background-color: #ff3333;
+        }
+
+        .room-card.vacant {
+            background-color: #33cc33;
+        }
+
+        .room-card h3 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+        
+        .room-card p {
+            font-size: 0.9em;
+            color: #ccc;
+            margin: 5px 0;
+        }
+
+        .edit-fields {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .edit-fields input {
+            width: calc(100% - 20px);
+            padding: 8px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background-color: #2c2c2c;
+            color: white;
+        }
+
+        .edit-fields button {
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            background: #c084fc;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .edit-fields button:hover {
+            background: #a967f1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Teacher Hostel Management</h1>
+
+    <div class="hostel-tabs">
+        <button class="tab-button active" data-hostel="Boys">Boys Hostel</button>
+        <button class="tab-button" data-hostel="Girls">Girls Hostel</button>
+    </div>
+
+    <div class="rooms-grid" id="roomsGrid">
+        </div>
+</div>
+
+<script>
+    // Initial hostel data (simulating a database with 50 beds in each hostel)
+    const initialHostelData = {
+        Boys: [
+            { room: "B001", type: "Single AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "B002", type: "Double Non-AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+            { room: "B003", type: "Double Non-AC", capacity: 2, vacant: 0, occupied: 2, status: "occupied" },
+            { room: "B004", type: "Triple AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "B005", type: "Single AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "B006", type: "Triple Non-AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "B007", type: "Triple AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "B008", type: "Double AC", capacity: 2, vacant: 0, occupied: 2, status: "occupied" },
+            { room: "B009", type: "Triple Non-AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "B010", type: "Double AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+            { room: "B011", type: "Double AC", capacity: 2, vacant: 0, occupied: 2, status: "occupied" },
+            { room: "B012", type: "Single AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "B013", type: "Single Non-AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "B014", type: "Single Non-AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "B015", type: "Triple Non-AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "B016", type: "Triple AC", capacity: 3, vacant: 0, occupied: 3, status: "occupied" },
+            { room: "B017", type: "Double AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+            { room: "B018", type: "Double AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+            { room: "B019", type: "Single Non-AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "B020", type: "Double Non-AC", capacity: 2, vacant: 1, occupied: 1, status: "vacant" },
+            { room: "B021", type: "Triple AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "B022", type: "Double AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+            { room: "B023", type: "Double Non-AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+            { room: "B024", type: "Single AC", capacity: 1, vacant: 0, occupied: 1, status: "occupied" },
+            { room: "B025", type: "Triple AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+        ],
+        Girls: [
+            { room: "G101", type: "Single AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "G102", type: "Double AC", capacity: 2, vacant: 0, occupied: 2, status: "occupied" },
+            { room: "G103", type: "Triple Non-AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "G104", type: "Single Non-AC", capacity: 1, vacant: 0, occupied: 1, status: "occupied" },
+            { room: "G105", type: "Double Non-AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+            { room: "G106", type: "Double Non-AC", capacity: 2, vacant: 1, occupied: 1, status: "vacant" },
+            { room: "G107", type: "Single AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "G108", type: "Triple AC", capacity: 3, vacant: 0, occupied: 3, status: "occupied" },
+            { room: "G109", type: "Triple Non-AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "G110", type: "Double AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+            { room: "G111", type: "Single Non-AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "G112", type: "Triple AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "G113", type: "Double AC", capacity: 2, vacant: 0, occupied: 2, status: "occupied" },
+            { room: "G114", type: "Single Non-AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "G115", type: "Triple Non-AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "G116", type: "Double AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+            { room: "G117", type: "Double Non-AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+            { room: "G118", type: "Single AC", capacity: 1, vacant: 0, occupied: 1, status: "occupied" },
+            { room: "G119", type: "Triple Non-AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "G120", type: "Double Non-AC", capacity: 2, vacant: 1, occupied: 1, status: "vacant" },
+            { room: "G121", type: "Single AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "G122", type: "Double Non-AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+            { room: "G123", type: "Triple AC", capacity: 3, vacant: 3, occupied: 0, status: "vacant" },
+            { room: "G124", type: "Single Non-AC", capacity: 1, vacant: 1, occupied: 0, status: "vacant" },
+            { room: "G125", type: "Double AC", capacity: 2, vacant: 2, occupied: 0, status: "vacant" },
+        ]
+    };
+
+    // Use localStorage for persistence
+    const hostelData = JSON.parse(localStorage.getItem('hostelData')) || initialHostelData;
+
+    const roomsGrid = document.getElementById('roomsGrid');
+    const tabButtons = document.querySelectorAll('.tab-button');
+
+    let currentHostel = 'Boys';
+
+    // Function to render the rooms based on the selected hostel
+    const renderRooms = (hostel) => {
+        roomsGrid.innerHTML = '';
+        hostelData[hostel].forEach(room => {
+            const roomCard = document.createElement('div');
+            roomCard.className = `room-card ${room.status}`;
+            roomCard.innerHTML = `
+                <h3>${room.room}</h3>
+                <p>Type: ${room.type}</p>
+                <p>Total Seats: ${room.capacity}</p>
+                <p>Vacant: ${room.vacant}</p>
+                <p>Occupied: ${room.occupied}</p>
+                <div class="edit-fields">
+                    <input type="number" class="vacant-input" value="${room.vacant}" min="0" max="${room.capacity}">
+                    <button class="update-btn">Update</button>
+                </div>
+            `;
+            roomsGrid.appendChild(roomCard);
+        });
+    };
+
+    // Event listener for tab switching
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            currentHostel = button.dataset.hostel;
+            renderRooms(currentHostel);
+        });
+    });
+
+    // Event listener for updating room data
+    roomsGrid.addEventListener('click', (event) => {
+        if (event.target.classList.contains('update-btn')) {
+            const roomCard = event.target.closest('.room-card');
+            const roomNumber = roomCard.querySelector('h3').textContent;
+            const vacantInput = roomCard.querySelector('.vacant-input');
+            const newVacantCount = parseInt(vacantInput.value);
+
+            const roomIndex = hostelData[currentHostel].findIndex(r => r.room === roomNumber);
+            
+            if (roomIndex !== -1) {
+                const room = hostelData[currentHostel][roomIndex];
+                
+                // Validate the new vacant count
+                if (newVacantCount < 0 || newVacantCount > room.capacity) {
+                    alert(`Invalid number. Vacant seats must be between 0 and ${room.capacity}.`);
+                    return;
+                }
+
+                room.vacant = newVacantCount;
+                room.occupied = room.capacity - newVacantCount;
+                room.status = (newVacantCount === 0) ? 'occupied' : 'vacant';
+            }
+
+            // Save changes and re-render
+            localStorage.setItem('hostelData', JSON.stringify(hostelData));
+            renderRooms(currentHostel);
+        }
+    });
+
+    // Initial render
+    renderRooms(currentHostel);
+</script>
+
+</body>
+</html>
