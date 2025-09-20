@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library Teacher Portal</title>
+  <style>
+    :root {
+      --primary-color: #8b5cf6;
+      --bg-dark: #0e0e1a;
+      --card-bg: #1a1b26;
+      --text-color: #e0e0e0;
+      --muted-text: #a1a1aa;
+      --success: #22c55e;
+      --danger: #ef4444;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-color);
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .card-header {
+      color: var(--primary-color);
+      font-size: 1.5em;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted-text);
+      font-size: 0.95em;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      background-color: #252634;
+      color: var(--text-color);
+      font-size: 1em;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background-color: #6d28d9;
+      transform: translateY(-2px);
+    }
+
+    .seat-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 10px;
+    }
+
+    .seat {
+      padding: 15px 10px;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #fff;
+      transition: transform 0.2s;
+    }
+
+    .seat.green {
+      background-color: var(--success);
+    }
+
+    .seat.red {
+      background-color: var(--danger);
+    }
+
+    .seat:hover {
+      transform: scale(1.05);
+    }
+
+    .success-message {
+      color: var(--success);
+      margin-top: 10px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1 style="text-align: center; color: var(--primary-color);">Library Teacher Portal</h1>
+
+  <div class="card">
+    <div class="card-header">Manage Issued Books</div>
+    <form id="bookForm">
+      <label for="bookName">Book Name:</label>
+      <input type="text" id="bookName" required>
+
+      <label for="issueDate">Issue Date:</label>
+      <input type="date" id="issueDate" required>
+
+      <label for="returnDate">Return Date:</label>
+      <input type="date" id="returnDate" required>
+
+      <label for="fineAmount">Fine (₹):</label>
+      <input type="number" id="fineAmount" required>
+
+      <button type="submit">Update Book Details</button>
+    </form>
+    <div id="bookMessage" class="success-message"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Manage Seat Availability</div>
+    <p style="color: var(--muted-text);">Click on a seat to toggle its status (Green: Available, Red: Occupied).</p>
+    <div class="seat-grid" id="seatGrid"></div>
+    <div id="seatMessage" class="success-message"></div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const bookForm = document.getElementById('bookForm');
+  const bookMessage = document.getElementById('bookMessage');
+  const seatGrid = document.getElementById('seatGrid');
+  const seatMessage = document.getElementById('seatMessage');
+
+  // Fetch book data
+  let bookData = {};
+  try {
+    const resBook = await fetch('http://localhost:5000/api/library/book');
+    if (resBook.ok) bookData = await resBook.json();
+  } catch(err) {
+    console.error('Error fetching book:', err);
+  }
+
+  // Populate book form
+  document.getElementById('bookName').value = bookData.book_name || '';
+  document.getElementById('issueDate').value = bookData.issue_date || '';
+  document.getElementById('returnDate').value = bookData.return_date || '';
+  document.getElementById('fineAmount').value = bookData.fine_amount || 0;
+
+  // Fetch seats
+  let seats = [];
+  try {
+    const resSeats = await fetch('http://localhost:5000/api/library/seats');
+    if (resSeats.ok) seats = await resSeats.json();
+  } catch(err) {
+    console.error('Error fetching seats:', err);
+  }
+
+  const renderSeats = () => {
+    seatGrid.innerHTML = '';
+    seats.forEach(seat => {
+      const seatDiv = document.createElement('div');
+      seatDiv.className = `seat ${seat.status}`;
+      seatDiv.textContent = `Seat ${seat.seat_number}`;
+      seatDiv.addEventListener('click', async () => {
+        const newStatus = seat.status === 'green' ? 'red' : 'green';
+        try {
+          const res = await fetch(`http://localhost:5000/api/library/seats/${seat.id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({status: newStatus})
+          });
+          if (res.ok) {
+            seat.status = newStatus;
+            renderSeats();
+            seatMessage.textContent = `Seat ${seat.seat_number} updated!`;
+            setTimeout(() => seatMessage.textContent = '', 2000);
+          }
+        } catch(err) {
+          console.error(err);
+        }
+      });
+      seatGrid.appendChild(seatDiv);
+    });
+  };
+
+  renderSeats();
+
+  // Handle book form submission
+  bookForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const books = {
+      book_name: document.getElementById('bookName').value,
+      issue_date: document.getElementById('issueDate').value,
+      return_date: document.getElementById('returnDate').value,
+      fine_amount: parseFloat(document.getElementById('fineAmount').value)
+    };
+
+    try {
+      const res = await fetch('http://localhost:5000/api/library/book', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(books)
+      });
+      if (res.ok) {
+        bookMessage.textContent = 'Book details updated successfully!';
+        setTimeout(() => bookMessage.textContent = '', 2000);
+      }
+    } catch(err) {
+      console.error(err);
+    }
+  });
+});
+</script>
+
+</body>
+</html>

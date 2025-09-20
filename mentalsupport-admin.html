@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Mental Health Support</title>
+    <style>
+        body {
+            background-color: #0e0e1a;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 30px;
+        }
+
+        .card {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #141428;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 26px;
+            margin-bottom: 20px;
+            color: #c084fc;
+            text-align: center;
+        }
+
+        .complaint-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .complaint-table th, .complaint-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #2c2c2c;
+        }
+        
+        .complaint-table th {
+            color: #bb86fc;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .complaint-table tr:hover {
+            background-color: #1e1e2e;
+        }
+
+        .status-button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .status-button.pending {
+            background-color: #f44336;
+        }
+        .status-button.in-progress {
+            background-color: #ff9800;
+        }
+        .status-button.resolved {
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Mental Health Support Admin Portal</h1>
+    
+    <div id="no-complaints-message" style="text-align: center; margin-top: 20px; font-style: italic; color: #aaa;">
+        No new complaints submitted.
+    </div>
+
+    <div class="table-container">
+        <table class="complaint-table" id="complaintTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Complaint ID</th>
+                    <th>Date</th>
+                    <th>Issue</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="complaint-body">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const complaintBody = document.getElementById('complaint-body');
+    const complaintTable = document.getElementById('complaintTable');
+    const noComplaintsMessage = document.getElementById('no-complaints-message');
+
+    // Fetch complaints from server
+    const fetchComplaints = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/support');
+            if (!res.ok) throw new Error("Failed to fetch complaints");
+
+            const complaints = await res.json();
+
+            complaintBody.innerHTML = '';
+            if (complaints.length === 0) {
+                complaintTable.style.display = 'none';
+                noComplaintsMessage.style.display = 'block';
+                return;
+            }
+
+            complaintTable.style.display = 'table';
+            noComplaintsMessage.style.display = 'none';
+
+            complaints.forEach(c => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${c.id}</td>
+                    <td>${new Date(c.created_at).toLocaleDateString()}</td>
+                    <td>${c.complaint}</td>
+                    <td>
+                        <button class="status-button pending">Pending</button>
+                    </td>
+                `;
+                complaintBody.appendChild(row);
+            });
+        } catch (err) {
+            console.error(err);
+            noComplaintsMessage.textContent = "Error loading complaints from server.";
+            noComplaintsMessage.style.display = "block";
+        }
+    };
+
+    // Event listener to change complaint status
+    complaintBody.addEventListener('click', (e) => {
+        if (e.target.classList.contains('status-button')) {
+            const row = e.target.closest('tr');
+            const btn = e.target;
+
+            // Cycle through statuses: Pending -> In-Progress -> Resolved -> Pending
+            if (btn.textContent === "Pending") btn.textContent = "In-Progress";
+            else if (btn.textContent === "In-Progress") btn.textContent = "Resolved";
+            else btn.textContent = "Pending";
+
+            btn.className = "status-button " + btn.textContent.toLowerCase().replace('-', '');
+        }
+    });
+
+    // Initial fetch
+    fetchComplaints();
+</script>
+
+
+</body>
+</html>
